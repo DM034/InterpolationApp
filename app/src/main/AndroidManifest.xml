@@ -3,8 +3,8 @@
 
     <application
         android:allowBackup="true"
-        android:label="InterpolationApp"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_foreground"
+        android:label="Sonde GO"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
