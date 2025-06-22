@@ -1,167 +1,208 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Interpolation de Capacité</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sonde FUEL OIL</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-  background-color: #121212;
-  color: #ffffff;
-  font-family: Arial, sans-serif;
-  max-width: 600px;
-  margin: auto;
-  padding: 20px;
-}
+      background-color: #121212;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
 
-label {
-  margin-top: 10px;
-  display: block;
-  color: #e0e0e0;
-}
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-input {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  font-size: 1em;
-  box-sizing: border-box;
-  background-color: #1e1e1e;
-  color: #ffffff;
-  border: 1px solid #444;
-  border-radius: 4px;
-}
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #1e1e1e;
+    }
 
-button {
-  margin-top: 20px;
-  padding: 10px;
-  font-size: 1em;
-  width: 100%;
-  background-color: #2e7d32;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
+    th, td {
+      border: 1px solid #444;
+      padding: 10px;
+      text-align: center;
+    }
 
-button:hover {
-  background-color: #1b5e20;
-}
+    th {
+      background-color: #2a2a2a;
+    }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  background-color: #1e1e1e;
-  color: white;
-}
+    td:nth-child(2), th:nth-child(2) {
+      width: 80px;
+    }
 
-th, td {
-  padding: 8px;
-  border: 1px solid #555;
-  text-align: center;
-}
+    input[type="number"] {
+      width: 90%;
+      background-color: #000;
+      color: #fff;
+      border: none;
+      padding: 5px;
+      text-align: center;
+      border-radius: 5px;
+    }
 
-th {
-  background-color: #2c2c2c;
-  color: #ffffff;
-}
+    #total-btn {
+      background-color: #2e7d32;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+    }
 
-#error-message {
-  color: #ff6b6b;
-  margin-top: 10px;
-}
+    #downloadBtn {
+      margin: 20px auto 0;
+      padding: 10px 20px;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      display: none;
+    }
 
+    #downloadBtnContainer {
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      input[type="number"] {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <h2>Interpolation des Capacité Tanks</h2>
+<h1>Sonde FUEL OIL</h1>
+<div id="capture-zone">
+  <table>
+    <thead>
+    <tr>
+      <th colspan="3" id="current-date">Date</th>
+    </tr>
+    <tr>
+      <th>TANK</th>
+      <th>m.</th>
+      <th>m³</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td>Port</td>
+      <td><input type="number" id="fo_p" placeholder="Ex: 1.16"></td>
+      <td id="res_fo_p">-</td>
+    </tr>
+    <tr>
+      <td>Starboard</td>
+      <td><input type="number" id="fo_s" placeholder="Ex: 1.14"></td>
+      <td id="res_fo_s">-</td>
+    </tr>
+    <tr>
+      <td>8 Port</td>
+      <td><input type="number" id="tank8_p" placeholder="Ex: 0.99"></td>
+      <td id="res_8_p">-</td>
+    </tr>
+    <tr>
+      <td>8 Starboard</td>
+      <td><input type="number" id="tank8_s" placeholder="Ex: 1.04"></td>
+      <td id="res_8_s">-</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+      <td></td>
+      <td id="total-btn" onclick="calculer()">TOTAL</td>
+      <td id="res_total">-</td>
+    </tr>
+    </tfoot>
+  </table>
+</div>
 
-  <label for="fo_p">FO(p)</label>
-  <input type="number" id="fo_p" step="0.01" placeholder="Ex: 1.2" inputmode="decimal">
+<div id="downloadBtnContainer">
+  <button id="downloadBtn" onclick="AndroidInterface.captureWebView()">Download</button>
+</div>
 
-  <label for="fo_s">FO(s)</label>
-  <input type="number" id="fo_s" step="0.01" placeholder="Ex: 1.2" inputmode="decimal">
+<script src="html2canvas.min.js"></script>
+<script>
+  const tank1 = [
+    {s: 0.20, c: 0.10}, {s: 0.40, c: 0.40}, {s: 0.60, c: 0.80}, {s: 0.80, c: 1.50},
+    {s: 1.00, c: 2.50}, {s: 1.20, c: 3.80}, {s: 1.40, c: 5.20}, {s: 1.60, c: 6.70},
+    {s: 1.80, c: 8.50}, {s: 2.00, c: 10.30}, {s: 2.20, c: 12.30}, {s: 2.40, c: 14.30},
+    {s: 2.60, c: 16.40}, {s: 2.80, c: 18.60}, {s: 3.00, c: 20.80}, {s: 3.22, c: 21.80}
+  ];
+  const tank2 = [
+    {s: 0.2, c: 2.80}, {s: 0.4, c: 5.70}, {s: 0.6, c: 8.50}, {s: 0.8, c: 11.30},
+    {s: 1.0, c: 14.20}, {s: 1.2, c: 17.00}, {s: 1.4, c: 19.90}, {s: 1.6, c: 22.70},
+    {s: 1.8, c: 25.50}, {s: 2.0, c: 28.40}, {s: 2.2, c: 31.20}, {s: 2.4, c: 34.00},
+    {s: 2.6, c: 36.90}, {s: 2.8, c: 39.70}, {s: 3.0, c: 42.60}, {s: 3.2, c: 45.40},
+    {s: 3.4, c: 48.20}, {s: 3.6, c: 51.10}, {s: 3.8, c: 53.90}, {s: 4.0, c: 56.70},
+    {s: 4.2, c: 59.60}, {s: 4.4, c: 62.40}, {s: 4.6, c: 65.20}, {s: 4.8, c: 68.10},
+    {s: 5.0, c: 70.90}, {s: 5.2, c: 73.80}, {s: 5.4, c: 75.50}
+  ];
 
-  <label for="tank8_p">8(p)</label>
-  <input type="number" id="tank8_p" step="0.01" placeholder="Ex: 1.2" inputmode="decimal">
-
-  <label for="tank8_s">8(s)</label>
-  <input type="number" id="tank8_s" step="0.01" placeholder="Ex: 1.2" inputmode="decimal">
-
-  <button onclick="calculer()">Calculer</button>
-
-  <div id="error-message"></div>
-  <div id="result-container"></div>
-
-  <script>
-    const tank1 = [
-      {s: 0.20, c: 0.10}, {s: 0.40, c: 0.40}, {s: 0.60, c: 0.80}, {s: 0.80, c: 1.50},
-      {s: 1.00, c: 2.50}, {s: 1.20, c: 3.80}, {s: 1.40, c: 5.20}, {s: 1.60, c: 6.70},
-      {s: 1.80, c: 8.50}, {s: 2.00, c: 10.30}, {s: 2.20, c: 12.30}, {s: 2.40, c: 14.30},
-      {s: 2.60, c: 16.40}, {s: 2.80, c: 18.60}, {s: 3.00, c: 20.80}, {s: 3.22, c: 21.80}
-    ];
-
-    const tank2 = [
-      {s: 0.2, c: 2.80}, {s: 0.4, c: 5.70}, {s: 0.6, c: 8.50}, {s: 0.8, c: 11.30},
-      {s: 1.0, c: 14.20}, {s: 1.2, c: 17.00}, {s: 1.4, c: 19.90}, {s: 1.6, c: 22.70},
-      {s: 1.8, c: 25.50}, {s: 2.0, c: 28.40}, {s: 2.2, c: 31.20}, {s: 2.4, c: 34.00},
-      {s: 2.6, c: 36.90}, {s: 2.8, c: 39.70}, {s: 3.0, c: 42.60}, {s: 3.2, c: 45.40},
-      {s: 3.4, c: 48.20}, {s: 3.6, c: 51.10}, {s: 3.8, c: 53.90}, {s: 4.0, c: 56.70},
-      {s: 4.2, c: 59.60}, {s: 4.4, c: 62.40}, {s: 4.6, c: 65.20}, {s: 4.8, c: 68.10},
-      {s: 5.0, c: 70.90}, {s: 5.2, c: 73.80}, {s: 5.4, c: 75.50}
-    ];
-
-    function interpolate(s, data) {
-      if (isNaN(s) || s < data[0].s || s > data[data.length - 1].s) return null;
-      for (let i = 0; i < data.length - 1; i++) {
-        const a = data[i], b = data[i + 1];
-        if (s === a.s) return a.c;
-        if (s > a.s && s < b.s) {
-          return a.c + ((b.c - a.c) * (s - a.s)) / (b.s - a.s);
-        }
+  function interpolate(s, data) {
+    if (isNaN(s) || s < data[0].s || s > data[data.length - 1].s) return null;
+    for (let i = 0; i < data.length - 1; i++) {
+      const a = data[i], b = data[i + 1];
+      if (s === a.s) return a.c;
+      if (s > a.s && s < b.s) {
+        return a.c + ((b.c - a.c) * (s - a.s)) / (b.s - a.s);
       }
-      return null;
     }
+    return null;
+  }
 
-    function calculer() {
-      const fo_p = parseFloat(document.getElementById("fo_p").value.replace(",", "."));
-      const fo_s = parseFloat(document.getElementById("fo_s").value.replace(",", "."));
-      const tank8_p = parseFloat(document.getElementById("tank8_p").value.replace(",", "."));
-      const tank8_s = parseFloat(document.getElementById("tank8_s").value.replace(",", "."));
+  function calculer() {
+    const fo_p = parseFloat(document.getElementById("fo_p").value.replace(",", ".")) || 0;
+    const fo_s = parseFloat(document.getElementById("fo_s").value.replace(",", ".")) || 0;
+    const tank8_p = parseFloat(document.getElementById("tank8_p").value.replace(",", ".")) || 0;
+    const tank8_s = parseFloat(document.getElementById("tank8_s").value.replace(",", ".")) || 0;
 
-      const errorMsg = document.getElementById("error-message");
-      const resultDiv = document.getElementById("result-container");
-      errorMsg.textContent = "";
-      resultDiv.innerHTML = "";
+    const val_fo_p = interpolate(fo_p, tank1) || 0;
+    const val_fo_s = interpolate(fo_s, tank1) || 0;
+    const val_8_p = interpolate(tank8_p, tank2) || 0;
+    const val_8_s = interpolate(tank8_s, tank2) || 0;
 
-      const values = [
-        { label: "FO(p)", val: interpolate(fo_p, tank1) },
-        { label: "FO(s)", val: interpolate(fo_s, tank1) },
-        { label: "8(p)", val: interpolate(tank8_p, tank2) },
-        { label: "8(s)", val: interpolate(tank8_s, tank2) }
-      ];
+    const total = val_fo_p + val_fo_s + val_8_p + val_8_s;
 
-      if (values.some(v => v.val === null)) {
-        errorMsg.textContent = "Une ou plusieurs hauteurs sont invalides ou hors plage.";
-        return;
-      }
+    document.getElementById("res_fo_p").textContent = val_fo_p.toFixed(3);
+    document.getElementById("res_fo_s").textContent = val_fo_s.toFixed(3);
+    document.getElementById("res_8_p").textContent = val_8_p.toFixed(3);
+    document.getElementById("res_8_s").textContent = val_8_s.toFixed(3);
+    document.getElementById("res_total").textContent = total.toFixed(3);
 
-      let total = values.reduce((sum, v) => sum + v.val, 0);
+    document.getElementById("downloadBtn").style.display = "inline-block";
+  }
 
-      let html = "<table><thead><tr><th>Entrée</th><th>Capacité (m³)</th></tr></thead><tbody>";
-      values.forEach(v => {
-        html += `<tr><td>${v.label}</td><td>${v.val.toFixed(3)}</td></tr>`;
-      });
-      html += `<tr><th>Total</th><th>${total.toFixed(3)} m³</th></tr>`;
-      html += "</tbody></table>";
+  function downloadImage() {
+    // On appelle Android via l'interface
+    AndroidInterface.captureWebView();
+  }
 
-      resultDiv.innerHTML = html;
-    }
-  </script>
+  // Set current date in English format
+  const now = new Date();
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayName = days[now.getDay()];
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  let hour = now.getHours();
+  const minute = String(now.getMinutes()).padStart(2, '0');
+  const second = String(now.getSeconds()).padStart(2, '0');
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12 || 12;
+  const hourStr = String(hour).padStart(2, '0');
 
+  const dateString = `${dayName} ${day}/${month}/${year} ${hourStr}:${minute}:${second} ${ampm}`;
+  document.getElementById("current-date").textContent = `Date: ${dateString}`;
+</script>
 </body>
 </html>
-
