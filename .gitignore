@@ -13,3 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# local Gradle caches used during troubleshooting
+.gradle-alt/
+.gradle-local/
+.gradle-*
