@@ -1,0 +1,38 @@
+name: iPhone CI - Build App
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build iPhone App
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Build iPhone simulator app
+        working-directory: ios/InterpolationApp
+        run: |
+          xcodebuild \
+            -project InterpolationApp.xcodeproj \
+            -scheme InterpolationApp \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath ../DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Upload iPhone app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iphone-app
+          path: ios/DerivedData/Build/Products/Debug-iphonesimulator/InterpolationApp.app
