@@ -9,6 +9,8 @@ android {
 
     compileSdk = 34
 
+    flavorDimensions += "edition"
+
     defaultConfig {
         applicationId = "com.example.sondego"
         minSdk = 21
@@ -21,9 +23,21 @@ android {
         viewBinding = true
     }
 
+    productFlavors {
+        create("standard") {
+            dimension = "edition"
+        }
+
+        create("photo") {
+            dimension = "edition"
+            applicationIdSuffix = ".photo"
+            versionNameSuffix = "-photo"
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
-                targetCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {

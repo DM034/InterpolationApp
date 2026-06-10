@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Sonde Interpolation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #1e1e1e;
+    }
+
+    th, td {
+      border: 1px solid #444;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #2a2a2a;
+    }
+
+    input[type="number"] {
+      width: 90%;
+      background-color: #000;
+      color: #fff;
+      border: none;
+      padding: 5px;
+      text-align: center;
+      border-radius: 5px;
+    }
+
+    #total-btn {
+      background-color: #2e7d32;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    #downloadBtn {
+      margin: 20px auto 0;
+      padding: 10px 20px;
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      display: none;
+    }
+
+    #downloadBtnContainer {
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      input[type="number"] {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Sonde Interpolation</h1>
+<div id="capture-zone">
+  <table>
+    <thead>
+    <tr>
+      <th colspan="2" id="current-date">Date</th>
+    </tr>
+    <tr>
+      <th>Sounding</th>
+      <th>m³</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td><input type="number" id="sounding" placeholder="Ex: 0.95" step="0.001"></td>
+      <td id="result">-</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+      <td id="total-btn" onclick="calculer()">CALCULER</td>
+      <td id="res_total">-</td>
+    </tr>
+    </tfoot>
+  </table>
+</div>
+
+<div id="downloadBtnContainer">
+  <button id="downloadBtn" onclick="AndroidInterface.captureWebView()">Download</button>
+</div>
+
+<script>
+  const soundings = [
+    { s: 0.000, c: 0.00 },
+    { s: 0.050, c: 0.21 },
+    { s: 0.100, c: 1.18 },
+    { s: 0.150, c: 3.29 },
+    { s: 0.200, c: 5.41 },
+    { s: 0.250, c: 7.53 },
+    { s: 0.300, c: 9.64 },
+    { s: 0.350, c: 11.76 },
+    { s: 0.400, c: 13.88 },
+    { s: 0.450, c: 15.99 },
+    { s: 0.500, c: 18.11 },
+    { s: 0.550, c: 20.23 },
+    { s: 0.600, c: 22.34 },
+    { s: 0.650, c: 24.46 },
+    { s: 0.700, c: 26.58 },
+    { s: 0.750, c: 28.69 },
+    { s: 0.800, c: 30.81 },
+    { s: 0.850, c: 32.93 },
+    { s: 0.900, c: 35.05 },
+    { s: 0.950, c: 37.16 },
+    { s: 1.000, c: 39.28 },
+    { s: 1.050, c: 41.40 },
+    { s: 1.100, c: 43.51 },
+    { s: 1.150, c: 45.63 }
+  ];
+
+  function interpolate(sounding, data) {
+    if (isNaN(sounding) || sounding < data[0].s || sounding > data[data.length - 1].s) return null;
+
+    for (let i = 0; i < data.length - 1; i++) {
+      const start = data[i];
+      const end = data[i + 1];
+
+      if (sounding === start.s) return start.c;
+      if (sounding > start.s && sounding < end.s) {
+        return start.c + ((end.c - start.c) * (sounding - start.s)) / (end.s - start.s);
+      }
+    }
+
+    return data[data.length - 1].c;
+  }
+
+  function calculer() {
+    const sounding = parseFloat(document.getElementById("sounding").value.replace(",", ".")) || 0;
+    const value = interpolate(sounding, soundings) || 0;
+
+    document.getElementById("result").textContent = value.toFixed(3);
+    document.getElementById("res_total").textContent = value.toFixed(3);
+    document.getElementById("downloadBtn").style.display = "inline-block";
+  }
+
+  const now = new Date();
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayName = days[now.getDay()];
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  let hour = now.getHours();
+  const minute = String(now.getMinutes()).padStart(2, '0');
+  const second = String(now.getSeconds()).padStart(2, '0');
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12 || 12;
+  const hourStr = String(hour).padStart(2, '0');
+
+  const dateString = `${dayName} ${day}/${month}/${year} ${hourStr}:${minute}:${second} ${ampm}`;
+  document.getElementById("current-date").textContent = `Date: ${dateString}`;
+</script>
+</body>
+</html>
